@@ -1,0 +1,60 @@
+﻿<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<div id="chart_div"></div>
+
+<script>
+    google.charts.load('current', { packages: ['corechart', 'bar'] });
+    google.charts.setOnLoadCallback(drawBasic);
+
+    function drawBasic() {
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Date');
+        data.addColumn('number', 'AvgValue');
+
+        var options = {
+            title: '@ViewBag.Title',
+            hAxis: {
+                title: 'Sessions',
+            },
+            vAxis: {
+                title: 'Value of canser'        
+            }
+        };
+
+        var sessions;
+
+        $.getJSON('@Url.Action("GetJSON", "Home")', null, function (result) {
+            if (result.Sessions.length) {
+                sessions = result.Sessions;
+                $.each(sessions, function (index, c) {
+                    data.addRow(
+                        [c.Date, c.AvgValue]
+                    );
+                });
+
+                var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+
+                // The select handler. Call the chart's getSelection() method
+                function myClickHandler() {
+                    var selection = chart.getSelection();
+                    for (var i = 0; i < selection.length; i++) {
+                        var item = selection[i];
+                        if (item.row != null && item.column != null) {
+                            alert("Date = " + sessions[item.row].Date + "\nAvgValue= " + sessions[item.row].AvgValue);                       
+                            data.removeRow(item.row);
+                            chart.draw(data, options);
+                        } 
+                    }
+                }
+
+                // Listen for the 'select' event, and call my function selectHandler() when
+                // the user selects something on the chart.
+                google.visualization.events.addListener(chart, 'select', myClickHandler);
+
+                chart.draw(data, options);
+            };
+        });
+    }
+
+   
+</script>
