@@ -119,11 +119,7 @@
                         return a < b ? -1 : a > b ? 1 : 0;
                     });
 
-                    console.log(data.getNumberOfRows());
-
                     data.removeRows(0, data.getNumberOfRows());
-
-                    console.log(data.getNumberOfRows());
 
                     $.each(sessions, function (index, c) {
                         data.addRow(
