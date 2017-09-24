@@ -8,10 +8,11 @@
     @Styles.Render("~/Content/css")
 
 </head>
-<body>
+<body>  
     @RenderBody()
-      
+
     @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/scripts/jquery.unobtrusive-ajax.min.js")
     @RenderSection("scripts", required: false)
 </body>
 </html>

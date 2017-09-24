@@ -19,7 +19,6 @@ namespace VacantionTestingWeb.Controllers
             return View();
         }
 
-        [HttpGet]
         public JsonResult GetJSON()
         {
             List<ChartViewModel> cvw = new List<ChartViewModel>();

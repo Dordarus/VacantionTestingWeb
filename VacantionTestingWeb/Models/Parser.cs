@@ -5,6 +5,7 @@ using System.Xml;
 
 namespace VacantionTestingWeb.Models
 {
+    //XML-doc parsing method
     public static class Parser
     {
         static private CultureInfo USCulture = new CultureInfo("en-US");
@@ -51,6 +52,7 @@ namespace VacantionTestingWeb.Models
             return group;
         }
 
+        //Average counting function
         private static double AvgValue(Session session)
         {
             double sum = 0;

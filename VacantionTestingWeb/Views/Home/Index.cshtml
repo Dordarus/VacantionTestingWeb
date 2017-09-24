@@ -1,10 +1,13 @@
 ﻿<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <div id="chart_div"></div>
 
+<div class="list-group" id="results">
+</div>
 <script>
     google.charts.load('current', { packages: ['corechart', 'bar'] });
     google.charts.setOnLoadCallback(drawBasic);
 
+    //the main basic drawing function of the chart
     function drawBasic() {
 
         var data = new google.visualization.DataTable();
@@ -17,14 +20,15 @@
                 title: 'Sessions',
             },
             vAxis: {
-                title: 'Value of canser'        
+                title: 'Value of canser'
             }
         };
-
-        var sessions;
-
+        //Receives data in JSON format
+        var initialLength;
+        var sessions = [];
         $.getJSON('@Url.Action("GetJSON", "Home")', null, function (result) {
-            if (result.Sessions.length) {
+            initialLength = result.Sessions.length;
+            if (initialLength) {
                 sessions = result.Sessions;
                 $.each(sessions, function (index, c) {
                     data.addRow(
@@ -34,16 +38,20 @@
 
                 var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
 
-                // The select handler. Call the chart's getSelection() method
+                //Chart Click Handler
                 function myClickHandler() {
                     var selection = chart.getSelection();
                     for (var i = 0; i < selection.length; i++) {
                         var item = selection[i];
                         if (item.row != null && item.column != null) {
-                            alert("Date = " + sessions[item.row].Date + "\nAvgValue= " + sessions[item.row].AvgValue);                       
+                            SaveSession(sessions[item.row].Date, sessions[item.row].AvgValue)
+
+                            Shift(item.row, sessions);
+                            sessions.length--; 
+
                             data.removeRow(item.row);
                             chart.draw(data, options);
-                        } 
+                        }
                     }
                 }
 
@@ -52,9 +60,80 @@
                 google.visualization.events.addListener(chart, 'select', myClickHandler);
 
                 chart.draw(data, options);
+
+                //Recursive shift to 1 element if there is already a difference between the Session and the given graph
+                function Shift(index, array) {
+                    array[index] = array[index + 1]
+                    if (array[index + 1]) {
+                        Shift(index + 1, array);
+                    }
+                }
+
+                //saves deleted column data
+                var delSessions = [];
+                function SaveSession(date, avgValue) {
+                    var session = {
+                        Date: date,
+                        AvgValue: avgValue
+                    }                  
+                    delSessions[delSessions.length] = session;
+                    AddToList(delSessions);
+                }
+
+                //creates a list of available sessions
+                function AddToList() {
+                    var list = $('#results');
+                    list.empty();
+                    list.append('<p>Available sessions</p>');
+                    for (var i = 0; i < delSessions.length; i++) {
+                        if (delSessions[i]) {
+                            list.append('<a href="#" onClick="func(this.innerHTML);" class="list-group-item">' + delSessions[i].Date + '</a>');
+                        };
+                    }
+                }
+                
+                //Restores the selected sessions to the chart
+                var clickedDate;           
+                func = function Restore(date) {
+                    var index;
+                    for (var i = 0; i < delSessions.length; i++) {
+                        if (delSessions[i]) {
+                            if (delSessions[i].Date == date) {
+                                data.addRow(
+                                    [date, delSessions[i].AvgValue]                                   
+                                );
+                                sessions.push({ Date: date, AvgValue: delSessions[i].AvgValue });
+                                index = i;
+                            }
+                        }
+                    }
+                    
+                    Shift(index, delSessions);
+                    delSessions.length--;                   
+
+                    AddToList();
+
+                    sessions.sort(function (a, b) {
+                        a = new Date(a.Date.split(".")[1] + "," + a.Date.split(".")[0] + "," + a.Date.split(".")[2]);
+                        b = new Date(b.Date.split(".")[1] + "," + b.Date.split(".")[0] + "," + b.Date.split(".")[2]);
+                        return a < b ? -1 : a > b ? 1 : 0;
+                    });
+
+                    console.log(data.getNumberOfRows());
+
+                    data.removeRows(0, data.getNumberOfRows());
+
+                    console.log(data.getNumberOfRows());
+
+                    $.each(sessions, function (index, c) {
+                        data.addRow(
+                            [c.Date, c.AvgValue]
+                        );
+                    });
+
+                    chart.draw(data, options);
+                }              
             };
         });
     }
-
-   
 </script>
